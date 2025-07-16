@@ -1,10 +1,4 @@
-module Lib (
-    Board (..),
-    findNextEmpty,
-    checkBoard,
-    update,
-    solve,
-) where
+module Lib (Board (..), findNextEmpty, checkBoard, update, solve) where
 
 import Data.List (findIndex)
 import Data.Maybe (catMaybes, isNothing)
@@ -72,5 +66,3 @@ solve board =
         Just pos ->
             let candidates = filter checkBoard (update board pos . Just <$> [1 .. 9])
              in concatMap solve candidates
-
--- Debug helpers
