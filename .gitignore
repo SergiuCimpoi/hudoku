@@ -1,2 +1,51 @@
+# Stack build artifacts
 .stack-work/
+
+# Cabal and GHC build artifacts
+dist/
+dist-*/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+
+# Ignore .cabal file if generated from package.yaml (for hpack users)
+# Uncomment the following line if you use package.yaml as your source of truth:
+# your-project-name.cabal
+
+# Cabal project local config
+cabal.project.local
+cabal.project.local~
+
+# Haskell Language Server and related tooling
+hie.yaml
+.hie
+.hie/*
+
+# Editor and IDE files
+*.swp
+*.swo
 *~
+*.tags
+*.iml
+.dir-locals.el
+.idea/
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Other
+.hsenv
+.hpc
+cabal.sandbox.config
+.cabal-sandbox/
+.HTF/
+.ghc.environment.*
+.hspec-failures
+_release/
+_site/
+.python-doc-virtualenv
+.vagrant/
+*.imports
+
