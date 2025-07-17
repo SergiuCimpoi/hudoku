@@ -73,5 +73,5 @@ solve board =
     case findNextEmpty board of
         Nothing -> [board]
         Just pos ->
-            let candidates = filter checkBoard (update board pos . Just <$> possible board pos)
+            let candidates = update board pos . Just <$> possible board pos
              in concatMap solve candidates
