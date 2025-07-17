@@ -1,5 +1,6 @@
-module Lib (Board (..), findNextEmpty, checkBoard, update, solve, possible) where
+module Lib (Board (..), findNextEmpty, update, solve, possible, checkBoard) where
 
+import Data.Foldable (minimumBy)
 import Data.List (findIndex)
 import Data.Maybe (catMaybes, isNothing)
 
@@ -49,6 +50,14 @@ findNextEmpty (Board rows) = do
     col <- findIndex isNothing (rows !! row)
     return (row, col)
 
+-- find the empty position (row, col) with least possible numbers
+findBestEmpty :: Board -> Maybe ((Int, Int), [Int])
+findBestEmpty board@(Board rows) =
+    let allEmptyPos = [((r, c), possible board (r, c)) | r <- [0 .. 8], c <- [0 .. 8], isNothing $ rows !! r !! c]
+     in if null allEmptyPos
+            then Nothing
+            else Just $ minimumBy (\a b -> (length . snd) a `compare` (length . snd) b) allEmptyPos
+
 update :: Board -> (Int, Int) -> Maybe Int -> Board
 update (Board rows) (r, c) val =
     case splitAt r rows of
@@ -70,8 +79,8 @@ possible board (r, c) =
 
 solve :: Board -> [Board]
 solve board =
-    case findNextEmpty board of
+    case findBestEmpty board of
         Nothing -> [board]
-        Just pos ->
-            let candidates = update board pos . Just <$> possible board pos
+        Just (pos, ns) ->
+            let candidates = update board pos . Just <$> ns
              in concatMap solve candidates
