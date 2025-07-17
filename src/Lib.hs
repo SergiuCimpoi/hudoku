@@ -1,4 +1,4 @@
-module Lib (Board (..), findNextEmpty, checkBoard, update, solve) where
+module Lib (Board (..), findNextEmpty, checkBoard, update, solve, possible) where
 
 import Data.List (findIndex)
 import Data.Maybe (catMaybes, isNothing)
@@ -59,10 +59,19 @@ update (Board rows) (r, c) val =
             (_, []) -> Board rows
         (_, []) -> Board rows
 
+possible :: Board -> (Int, Int) -> [Int]
+possible board (r, c) =
+    [ n
+    | n <- [1 .. 9]
+    , n `notElem` catMaybes (hLine board r)
+    , n `notElem` catMaybes (vLine board c)
+    , n `notElem` catMaybes (block board (r `div` 3) (c `div` 3))
+    ]
+
 solve :: Board -> [Board]
 solve board =
     case findNextEmpty board of
         Nothing -> [board]
         Just pos ->
-            let candidates = filter checkBoard (update board pos . Just <$> [1 .. 9])
+            let candidates = filter checkBoard (update board pos . Just <$> possible board pos)
              in concatMap solve candidates
