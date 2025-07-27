@@ -1,7 +1,6 @@
-module Lib (Board (..), findNextEmpty, update, solve, possible, checkBoard) where
+module Lib (Board (..), findBestEmpty, update, solve, possible, checkBoard) where
 
 import Data.Foldable (minimumBy)
-import Data.List (findIndex)
 import Data.Maybe (catMaybes, isNothing)
 
 type Cell = Maybe Int
@@ -42,22 +41,6 @@ checkBoard board = checkHLines && checkVLines && checkBlocks
             (\(r, c) -> isValid (block board r c))
             [(r, c) | r <- [0 .. 2], c <- [0 .. 2]]
 
--- TODO: scans the row containing Nothing twice
--- can be optimised by explicit recursion over all rows
-findNextEmpty :: Board -> Maybe (Int, Int)
-findNextEmpty (Board rows) = do
-    row <- findIndex (any isNothing) rows
-    col <- findIndex isNothing (rows !! row)
-    return (row, col)
-
--- find the empty position (row, col) with least possible numbers
-findBestEmpty :: Board -> Maybe ((Int, Int), [Int])
-findBestEmpty board@(Board rows) =
-    let allEmptyPos = [((r, c), possible board (r, c)) | r <- [0 .. 8], c <- [0 .. 8], isNothing $ rows !! r !! c]
-     in if null allEmptyPos
-            then Nothing
-            else Just $ minimumBy (\a b -> (length . snd) a `compare` (length . snd) b) allEmptyPos
-
 update :: Board -> (Int, Int) -> Maybe Int -> Board
 update (Board rows) (r, c) val =
     case splitAt r rows of
@@ -77,10 +60,18 @@ possible board (r, c) =
     , n `notElem` catMaybes (block board (r `div` 3) (c `div` 3))
     ]
 
+-- find the empty position (row, col) with least possible numbers
+findBestEmpty :: Board -> Maybe ((Int, Int), [Int])
+findBestEmpty board@(Board rows) =
+    let allEmptyPos = [((r, c), possible board (r, c)) | r <- [0 .. 8], c <- [0 .. 8], isNothing $ rows !! r !! c]
+     in if null allEmptyPos
+            then Nothing
+            else Just $ minimumBy (\a b -> (length . snd) a `compare` (length . snd) b) allEmptyPos
+
 solve :: Board -> [Board]
 solve board =
     case findBestEmpty board of
         Nothing -> [board]
         Just (pos, ns) ->
-            let candidates = update board pos . Just <$> ns
-             in concatMap solve candidates
+            let boards = update board pos . Just <$> ns
+             in concatMap solve boards

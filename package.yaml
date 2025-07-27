@@ -35,6 +35,10 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+    - base
+    - vector
+    - matrix
 
 executables:
   hudoku-exe:
@@ -45,6 +49,7 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - directory
       - base
       - time
       - hudoku
