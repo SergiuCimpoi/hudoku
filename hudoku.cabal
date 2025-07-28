@@ -25,11 +25,10 @@ source-repository head
 
 library
   exposed-modules:
+      Base
       Data
       Debug
       Infer
-      Lib
-      Lib_1
   other-modules:
       Paths_hudoku
   autogen-modules:

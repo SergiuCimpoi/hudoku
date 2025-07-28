@@ -7,8 +7,8 @@ module Data (
     valid,
 ) where
 
+import Base (Board (..))
 import qualified Data.Matrix as M
-import Lib_1 (Board (..))
 
 s439 :: Board
 s439 =

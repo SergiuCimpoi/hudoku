@@ -1,4 +1,4 @@
-module Lib_1 (Board (..), solve) where
+module Base (Board (..), findBestEmpty, update, solve) where
 
 import Data.Foldable (minimumBy)
 import qualified Data.Matrix as M
@@ -6,7 +6,10 @@ import Data.Maybe (isNothing)
 import qualified Data.Vector as V
 
 type Cell = Maybe Int
-newtype Board = Board (M.Matrix Cell) deriving (Eq)
+newtype Board = Board
+    { getMatrix :: M.Matrix Cell
+    }
+    deriving (Eq)
 
 instance Show Board where
     show (Board mat) = unlines (fmap showRow (M.toLists mat))

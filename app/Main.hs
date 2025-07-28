@@ -1,8 +1,8 @@
 module Main (main) where
 
+import Base (solve)
 import Data (s439)
 import Data.Time (diffUTCTime, getCurrentTime)
-import Lib_1 (solve)
 
 main :: IO ()
 main = do
