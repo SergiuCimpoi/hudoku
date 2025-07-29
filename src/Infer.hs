@@ -16,11 +16,11 @@ instance Show MarkingCell where
 newtype MarkingBoard = MarkingBoard (M.Matrix MarkingCell) deriving (Eq, Show)
 
 isSingle :: MarkingCell -> Bool
-isSingle (Candidates (l : [])) = True
+isSingle (Candidates [_]) = True
 isSingle _ = False
 
 getSingle :: MarkingCell -> Int
-getSingle (Candidates (l : [])) = l
+getSingle (Candidates [l]) = l
 getSingle _ = undefined
 
 initialMarkedBoard :: MarkingBoard
