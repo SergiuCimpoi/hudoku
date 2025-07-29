@@ -1,24 +1,30 @@
-module Infer () where
+module Infer (mark, reduceSingles) where
 
 import Base (Board (..))
 import qualified Data.Matrix as M
+import Data.Maybe (fromJust, isJust)
 
 -- inferences
 
-data Cell = Value Int | Candidates [Int] deriving (Eq)
+data MarkingCell = Value Int | Candidates [Int] deriving (Eq)
 
-instance Show Cell where
+instance Show MarkingCell where
     show (Value v) = 'v' : show v
     show (Candidates []) = ""
     show (Candidates (c : cs)) = show c ++ "," ++ show (Candidates cs)
 
-newtype MarkedBoard = MarkedBoard (M.Matrix Cell) deriving (Eq, Show)
+newtype MarkingBoard = MarkingBoard (M.Matrix MarkingCell) deriving (Eq, Show)
 
-candidates :: Board -> (Int, Int) -> Cell
-candidates b (r, c) = undefined
+isSingle :: MarkingCell -> Bool
+isSingle (Candidates (l : [])) = True
+isSingle _ = False
 
-initialMarkedBoard :: MarkedBoard
-initialMarkedBoard = MarkedBoard $ M.matrix 9 9 (const $ Candidates [1 .. 9])
+getSingle :: MarkingCell -> Int
+getSingle (Candidates (l : [])) = l
+getSingle _ = undefined
+
+initialMarkedBoard :: MarkingBoard
+initialMarkedBoard = MarkingBoard $ M.matrix 9 9 (const $ Candidates [1 .. 9])
 
 blockFromPos :: (Int, Int) -> (Int, Int)
 blockFromPos (r, c) = ((r - 1) `div` 3, (c - 1) `div` 3)
@@ -29,9 +35,9 @@ isPosInBlock (r, c) (i, j) = r >= startRow && r < startRow + 3 && c >= startCol 
     startRow = 3 * i + 1
     startCol = 3 * j + 1
 
-addValue :: MarkedBoard -> (Int, Int) -> Int -> MarkedBoard
-addValue (MarkedBoard mat) (r, c) n =
-    MarkedBoard $
+addValue :: MarkingBoard -> (Int, Int) -> Int -> MarkingBoard
+addValue (MarkingBoard mat) (r, c) n =
+    MarkingBoard $
         M.matrix
             9
             9
@@ -48,16 +54,12 @@ addValue (MarkedBoard mat) (r, c) n =
                                     else cs
             )
 
--- if i == r )
+mark :: Board -> MarkingBoard
+mark (Board mat) =
+    let elems = [(r, c, fromJust (mat M.! (r, c))) | c <- [1 .. 9], r <- [1 .. 9], isJust $ mat M.! (r, c)]
+     in foldr (\(r, c, n) b -> addValue b (r, c) n) initialMarkedBoard elems
 
--- mark :: Board -> MarkedBoard
--- mark board@(Board rows) =
---     let elems = [(r, c, fromJust (rows !! r !! c)) | c <- [0 .. 8], r <- [0 .. 8], isJust $ rows !! r !! c]
---      in foldr (\(r, c, n) b -> updateMarkedBoard b (r, c) n) initialMarkedBoard elems
-
--- mark :: Board -> MarkedBoard
--- mark b =
---     MarkedBoard
---         [ [candidates b (r, c) | c <- [0 .. 8]]
---         | r <- [0 .. 8]
---         ]
+reduceSingles :: MarkingBoard -> MarkingBoard
+reduceSingles board@(MarkingBoard mat) =
+    let elems = [(r, c, getSingle (mat M.! (r, c))) | c <- [1 .. 9], r <- [1 .. 9], isSingle $ mat M.! (r, c)]
+     in foldr (\(r, c, n) b -> addValue b (r, c) n) board elems
