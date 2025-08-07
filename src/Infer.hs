@@ -1,8 +1,13 @@
-module Infer (mark, reduceSingles) where
+module Infer (MarkingBoard (..), mark, reduceSingles, digitsToCellIds, rowToCells) where
 
 import Base (Board (..))
+import Control.Monad (forM_)
+import Control.Monad.ST (runST)
+import Data.List (find, tails)
 import qualified Data.Matrix as M
 import Data.Maybe (fromJust, isJust)
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as MV
 
 -- inferences
 
@@ -63,3 +68,45 @@ reduceSingles :: MarkingBoard -> MarkingBoard
 reduceSingles board@(MarkingBoard mat) =
     let elems = [(r, c, getSingle (mat M.! (r, c))) | c <- [1 .. 9], r <- [1 .. 9], isSingle $ mat M.! (r, c)]
      in foldr (\(r, c, n) b -> addValue b (r, c) n) board elems
+
+-- rowHiddenPairs :: MarkingBoard -> Int -> V.Vector ((Int, Int), [Int])
+-- rowHiddenPairs (MarkingBoard mat) r =
+--     let row = V.toList $ M.getRow r mat
+--      in
+
+distinctPairs :: [a] -> [(a, a)]
+distinctPairs list = [(x, y) | (x : xs) <- tails list, y <- xs]
+
+-- rowHiddenPairs :: [MarkingCell] -> V.Vector ((Int, Int), [Int])
+-- rowHiddenPairs list@(cell : cells) = case cell of
+--     Value _ -> rowHiddenPairs cells
+--     Candidates cs -> (\c -> findIndices (\a -> )) <$> distinctPairs cs
+
+rowToCells :: MarkingBoard -> Int -> [MarkingCell]
+rowToCells (MarkingBoard mat) row = V.toList $ M.getRow row mat
+
+digitsToCellIds' :: [MarkingCell] -> V.Vector [Int]
+digitsToCellIds' cells =
+    foldr
+        ( \(idx, c) acc -> case c of
+            Value _ -> acc
+            Candidates ns ->
+                let ns' = fmap (\x -> x - 1) ns
+                 in acc V.// [(x, idx : (acc V.! x)) | x <- ns']
+        )
+        (V.replicate 9 [])
+        (zip [0 ..] cells)
+
+digitsToCellIds :: [MarkingCell] -> V.Vector [Int]
+digitsToCellIds cells = runST $ do
+    mv <- MV.replicate 9 []
+    forM_ (zip [0 ..] cells) $ \(idx, c) ->
+        case c of
+            Value _ -> return ()
+            Candidates ns -> forM_ ns $ \x -> do
+                old <- MV.read mv (x - 1)
+                MV.write mv (x - 1) (idx : old)
+    V.freeze mv
+
+-- reduceHiddenPairs :: MarkingBoard -> MarkingBoard
+-- reduceHiddenPairs board@(MarkingBoard mat) =
