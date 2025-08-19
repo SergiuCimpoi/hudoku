@@ -9,8 +9,6 @@ import Data.Maybe (fromJust, isJust)
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 
--- inferences
-
 data MarkingCell = Value Int | Candidates [Int] deriving (Eq)
 
 instance Show MarkingCell where
