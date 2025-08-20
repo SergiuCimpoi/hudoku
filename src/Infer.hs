@@ -1,7 +1,7 @@
-module Infer (MarkingBoard (..), mark, reduceSingles, digitsToCellIds, rowToCells, colToCells, blockToCells) where
+module Infer (MarkingBoard (..), mark, reduceSingles, digitsToCellIds, rowToCells, colToCells, blockToCells, markV, reduceSinglesV) where
 
 import Base (Board (..))
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.ST (runST)
 import Data.List (find, tails)
 import qualified Data.Matrix as M
@@ -11,6 +11,65 @@ import qualified Data.Vector.Mutable as MV
 
 data MarkingCell = Value Int | Candidates [Int] deriving (Eq)
 
+--------------
+newtype MarkingBoardV = MarkingBoardV (V.Vector MarkingCell) deriving (Eq, Show)
+
+matrixSize :: Int
+matrixSize = 9
+
+matrixToVector :: M.Matrix MarkingCell -> MarkingBoardV
+matrixToVector mat =
+    MarkingBoardV $
+        V.fromList [M.getElem r c mat | r <- [1 .. matrixSize], c <- [1 .. matrixSize]]
+
+vectorToMatrix :: MarkingBoardV -> M.Matrix MarkingCell
+vectorToMatrix (MarkingBoardV vec) =
+    M.matrix matrixSize matrixSize $ \(r, c) ->
+        vec V.! ((r - 1) * matrixSize + (c - 1))
+
+toMarkingBoardV :: MarkingBoard -> MarkingBoardV
+toMarkingBoardV (MarkingBoard mat) = matrixToVector mat
+
+toMarkingBoard :: MarkingBoardV -> MarkingBoard
+toMarkingBoard mbv = MarkingBoard (vectorToMatrix mbv)
+
+addValueST :: MarkingBoardV -> (Int, Int) -> Int -> MarkingBoardV
+addValueST (MarkingBoardV vec) (r, c) n = MarkingBoardV $ runST $ do
+    mvec <- V.thaw vec
+    let index (row, col) = row * 9 + col
+        pos = index (r, c)
+        inAffected (mr, mc) =
+            mr == r || mc == c || isPosInBlock (mr, mc) (blockFromPos (r, c))
+
+    MV.write mvec pos (Value n)
+
+    mapM_
+        ( \i -> do
+            cell <- MV.read mvec i
+            case cell of
+                Value _ -> return ()
+                Candidates cs -> do
+                    let (mr, mc) = i `divMod` 9
+                    when (inAffected (mr, mc)) $
+                        MV.write mvec i (Candidates (filter (/= n) cs))
+        )
+        [0 .. 80]
+
+    V.freeze mvec
+
+markV :: Board -> MarkingBoardV
+markV (Board mat) =
+    let elems = [(r, c, fromJust (mat M.! (r + 1, c + 1))) | c <- [0 .. 8], r <- [0 .. 8], isJust $ mat M.! (r + 1, c + 1)]
+        initialV = toMarkingBoardV initialMarkedBoard
+     in foldr (\(r, c, n) b -> addValueST b (r, c) n) initialV elems
+
+reduceSinglesV :: MarkingBoardV -> MarkingBoardV
+reduceSinglesV boardV@(MarkingBoardV vec) =
+    let getCell r c = vec V.! (r * 9 + c)
+        elems = [(r, c, getSingle (getCell r c)) | c <- [0 .. 8], r <- [0 .. 8], isSingle (getCell r c)]
+     in foldr (\(r, c, n) b -> addValueST b (r, c) n) boardV elems
+
+--------------------
 instance Show MarkingCell where
     show (Value v) = 'v' : show v
     show (Candidates []) = ""
