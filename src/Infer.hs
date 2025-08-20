@@ -1,4 +1,4 @@
-module Infer (MarkingBoard (..), mark, reduceSingles, digitsToCellIds, rowToCells) where
+module Infer (MarkingBoard (..), mark, reduceSingles, digitsToCellIds, rowToCells, colToCells, blockToCells) where
 
 import Base (Board (..))
 import Control.Monad (forM_)
@@ -30,13 +30,13 @@ initialMarkedBoard :: MarkingBoard
 initialMarkedBoard = MarkingBoard $ M.matrix 9 9 (const $ Candidates [1 .. 9])
 
 blockFromPos :: (Int, Int) -> (Int, Int)
-blockFromPos (r, c) = ((r - 1) `div` 3, (c - 1) `div` 3)
+blockFromPos (r, c) = (r `div` 3, c `div` 3)
 
 isPosInBlock :: (Int, Int) -> (Int, Int) -> Bool
-isPosInBlock (r, c) (i, j) = r >= startRow && r < startRow + 3 && c >= startCol && c < startCol + 3
+isPosInBlock (r, c) (br, bc) = r >= startRow && r < startRow + 3 && c >= startCol && c < startCol + 3
   where
-    startRow = 3 * i + 1
-    startCol = 3 * j + 1
+    startRow = 3 * br
+    startCol = 3 * bc
 
 addValue :: MarkingBoard -> (Int, Int) -> Int -> MarkingBoard
 addValue (MarkingBoard mat) (r, c) n =
@@ -44,27 +44,27 @@ addValue (MarkingBoard mat) (r, c) n =
         M.matrix
             9
             9
-            ( \(i, j) ->
-                if i == r && j == c
+            ( \(mr, mc) ->
+                if mr == (r + 1) && mc == (c + 1)
                     then
                         Value n
-                    else case mat M.! (i, j) of
+                    else case mat M.! (mr, mc) of
                         Value v -> Value v
                         Candidates cs ->
                             Candidates $
-                                if i == r || j == c || isPosInBlock (i, j) (blockFromPos (r, c))
+                                if mr == (r + 1) || mc == (c + 1) || isPosInBlock (mr - 1, mc - 1) (blockFromPos (r, c))
                                     then filter (/= n) cs
                                     else cs
             )
 
 mark :: Board -> MarkingBoard
 mark (Board mat) =
-    let elems = [(r, c, fromJust (mat M.! (r, c))) | c <- [1 .. 9], r <- [1 .. 9], isJust $ mat M.! (r, c)]
+    let elems = [(r, c, fromJust (mat M.! (r + 1, c + 1))) | c <- [0 .. 8], r <- [0 .. 8], isJust $ mat M.! (r + 1, c + 1)]
      in foldr (\(r, c, n) b -> addValue b (r, c) n) initialMarkedBoard elems
 
 reduceSingles :: MarkingBoard -> MarkingBoard
 reduceSingles board@(MarkingBoard mat) =
-    let elems = [(r, c, getSingle (mat M.! (r, c))) | c <- [1 .. 9], r <- [1 .. 9], isSingle $ mat M.! (r, c)]
+    let elems = [(r, c, getSingle (mat M.! (r + 1, c + 1))) | c <- [0 .. 8], r <- [0 .. 8], isSingle $ mat M.! (r + 1, c + 1)]
      in foldr (\(r, c, n) b -> addValue b (r, c) n) board elems
 
 -- rowHiddenPairs :: MarkingBoard -> Int -> V.Vector ((Int, Int), [Int])
@@ -81,7 +81,16 @@ distinctPairs list = [(x, y) | (x : xs) <- tails list, y <- xs]
 --     Candidates cs -> (\c -> findIndices (\a -> )) <$> distinctPairs cs
 
 rowToCells :: MarkingBoard -> Int -> [MarkingCell]
-rowToCells (MarkingBoard mat) row = V.toList $ M.getRow row mat
+rowToCells (MarkingBoard mat) row = V.toList $ M.getRow (row + 1) mat
+
+colToCells :: MarkingBoard -> Int -> [MarkingCell]
+colToCells (MarkingBoard mat) col = V.toList $ M.getCol (col + 1) mat
+
+blockToCells :: MarkingBoard -> Int -> Int -> [MarkingCell]
+blockToCells (MarkingBoard mat) i j = M.toList $ M.submatrix startRow (startRow + 2) startCol (startCol + 2) mat
+  where
+    startRow = 3 * i + 1
+    startCol = 3 * j + 1
 
 digitsToCellIds' :: [MarkingCell] -> V.Vector [Int]
 digitsToCellIds' cells =

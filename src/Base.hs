@@ -19,11 +19,11 @@ instance Show Board where
         showCell (Just n) = show n
 
 hLine :: Board -> Int -> V.Vector Cell
-hLine (Board mat) r = M.getRow r mat
+hLine (Board mat) r = M.getRow (r + 1) mat
 
 --
 vLine :: Board -> Int -> V.Vector Cell
-vLine (Board mat) c = M.getCol c mat
+vLine (Board mat) c = M.getCol (c + 1) mat
 
 block :: Board -> Int -> Int -> M.Matrix Cell
 block (Board mat) i j = M.submatrix startRow (startRow + 2) startCol (startCol + 2) mat
@@ -32,7 +32,7 @@ block (Board mat) i j = M.submatrix startRow (startRow + 2) startCol (startCol +
     startCol = 3 * j + 1
 
 update :: Board -> (Int, Int) -> Cell -> Board
-update (Board mat) rc val = Board $ M.setElem val rc mat
+update (Board mat) (r, c) val = Board $ M.setElem val (r + 1, c + 1) mat
 
 possible :: Board -> (Int, Int) -> [Int]
 possible board (r, c) =
@@ -40,13 +40,13 @@ possible board (r, c) =
     | n <- [1 .. 9]
     , n `V.notElem` V.catMaybes (hLine board r)
     , n `V.notElem` V.catMaybes (vLine board c)
-    , n `V.notElem` V.catMaybes (M.getMatrixAsVector $ block board ((r - 1) `div` 3) ((c - 1) `div` 3))
+    , n `V.notElem` V.catMaybes (M.getMatrixAsVector $ block board (r `div` 3) (c `div` 3))
     ]
 
 -- find the empty position (row, col) with least possible numbers
 findBestEmpty :: Board -> Maybe ((Int, Int), [Int])
 findBestEmpty board@(Board mat) =
-    let allEmptyPos = [((r, c), possible board (r, c)) | r <- [1 .. 9], c <- [1 .. 9], isNothing $ mat M.! (r, c)]
+    let allEmptyPos = [((r, c), possible board (r, c)) | r <- [0 .. 8], c <- [0 .. 8], isNothing $ mat M.! (r + 1, c + 1)]
      in if null allEmptyPos
             then Nothing
             else Just $ minimumBy (\a b -> (length . snd) a `compare` (length . snd) b) allEmptyPos
