@@ -50,6 +50,9 @@ addValueST (MarkingBoardV vec) (r, c) n = MarkingBoardV $ runST $ do
                 Value _ -> return ()
                 Candidates cs -> do
                     let (mr, mc) = i `divMod` 9
+                    -- if inAffected (mr, mc)
+                    --     then MV.write mvec i (Candidates (filter (/= n) cs))
+                    --     else return ()
                     when (inAffected (mr, mc)) $
                         MV.write mvec i (Candidates (filter (/= n) cs))
         )
