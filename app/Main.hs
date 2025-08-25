@@ -3,7 +3,7 @@ module Main (main) where
 import Base (solve)
 import Data (s439)
 import Data.Time (diffUTCTime, getCurrentTime)
-import Infer (MarkingBoard (..), colToCells, digitsToCellIds, mark, markV, reduceSinglesV, rowToCells)
+import Infer (MarkingBoard (..), blockToCells, colToCells, digitsToCellIds, mark, reduceSingles, rowToCells)
 
 backtracking :: IO ()
 backtracking = do
@@ -16,14 +16,15 @@ backtracking = do
 inference :: IO ()
 inference = do
     startTime <- getCurrentTime
-    let result = reduceSinglesV $ markV s439
+    let result = reduceSingles $ mark s439
     print result
     endTime <- getCurrentTime
     putStrLn $ "Execution time: " ++ show (diffUTCTime endTime startTime)
 
--- print $ rowToCells result 1
--- print $ digitsToCellIds (rowToCells result 1)
--- print $ digitsToCellIds (colToCells result 1)
+    print $ rowToCells result 1
+    print $ digitsToCellIds (rowToCells result 1)
+    print $ digitsToCellIds (colToCells result 1)
+    print $ digitsToCellIds (blockToCells result 0 0)
 
 main :: IO ()
 main = inference
