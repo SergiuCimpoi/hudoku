@@ -46,13 +46,6 @@ aiEscargot =
         M.fromLists
             [ [Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just 1]
             , [Nothing, Nothing, Nothing, Nothing, Nothing, Just 1, Just 2, Nothing, Nothing]
-            , [Nothing, Nothing, Just 8, Nothing, Nothing, Nothing, Nothing, Just 3, Nothing]
-            , [Nothing, Nothing, Nothing, Nothing, Just 7, Nothing, Nothing, Nothing, Nothing]
-            , [Nothing, Just 2, Nothing, Just 1, Nothing, Just 6, Nothing, Just 7, Nothing]
-            , [Nothing, Nothing, Nothing, Nothing, Just 8, Nothing, Nothing, Nothing, Nothing]
-            , [Nothing, Just 6, Nothing, Nothing, Nothing, Nothing, Just 9, Nothing, Nothing]
-            , [Nothing, Nothing, Just 3, Just 6, Nothing, Nothing, Nothing, Nothing, Nothing]
-            , [Just 1, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing]
             ]
 
 platinumBlonde :: Board
