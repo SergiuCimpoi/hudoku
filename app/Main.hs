@@ -4,7 +4,7 @@ import Base (solve)
 import Data (s439)
 import Data.Time (diffUTCTime, getCurrentTime)
 import qualified Data.Vector as V
-import Infer (MarkingBoard (..), MarkingCell (..), blockToCells, colToCells, digitsToCellIds, mark, reduceHiddenPairs', reduceSingles, rowToCells, rowToCellsV)
+import Infer (MarkingBoard (..), MarkingCell (..), blockToCells, colToCells, digitsToCellIds, mark, reduceHiddenPairs, reduceSingles, rowToCells, rowToCellsV)
 
 backtracking :: IO ()
 backtracking = do
@@ -29,20 +29,7 @@ inference = do
     -- print $ digitsToCellIds (colToCells marking 1)
     -- print $ digitsToCellIds (blockToCells marking 0 0)
 
-    let x = reduceHiddenPairs' (rowToCellsV marking 0)
-    -- let x =
-    --         reduceHiddenPairs' $
-    --             V.fromList
-    --                 [ Candidates [3, 8]
-    --                 , Value 2
-    --                 , Candidates [3, 6]
-    --                 , Candidates [3, 4, 6]
-    --                 , Value 5
-    --                 , Candidates [3, 4]
-    --                 , Candidates [1, 7, 8]
-    --                 , Value 9
-    --                 , Candidates [1, 6, 7]
-    --                 ]
+    let x = reduceHiddenPairs (rowToCellsV marking 0)
     print x
 
 main :: IO ()

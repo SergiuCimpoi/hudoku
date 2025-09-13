@@ -1,4 +1,4 @@
-module Infer (MarkingBoard (..), MarkingCell (..), mark, reduceSingles, digitsToCellIds, rowToCells, rowToCellsV, colToCells, blockToCells, reduceHiddenPairs') where
+module Infer (MarkingBoard (..), MarkingCell (..), mark, reduceSingles, digitsToCellIds, rowToCells, rowToCellsV, colToCells, blockToCells, reduceHiddenPairs) where
 
 import Base (Board (..))
 import Control.Monad (forM_, join, when)
@@ -144,11 +144,8 @@ digitsToCellIdsV cells = runST $ do
         cells
     V.freeze mv
 
-reduceHiddenPairs :: MarkingBoard -> MarkingBoard
-reduceHiddenPairs board@(MarkingBoard mat) = let x = digitsToCellIds $ colToCells board 0 in undefined
-
-reduceHiddenPairs' :: V.Vector MarkingCell -> V.Vector MarkingCell
-reduceHiddenPairs' cells = runST $ do
+reduceHiddenPairs :: V.Vector MarkingCell -> V.Vector MarkingCell
+reduceHiddenPairs cells = runST $ do
     mv <- V.thaw cells
     let cellMap = digitsToCellIdsV cells
     V.imapM_
